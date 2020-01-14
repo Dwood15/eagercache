@@ -15,7 +15,7 @@ Pending a comprehensive suite of unit tests, use of this package in production i
 ```Go
 package main
 
-import "github.com/dwood15/eagercache"
+import "github.com/Dwood15/eagercache"
 
 type ItemTypeToStore struct {
     baz bool
