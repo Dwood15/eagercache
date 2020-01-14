@@ -6,6 +6,10 @@ EagerCache does not vendor or use any third-pary packages.
 
 The goal of EagerCache is to provide an easy interface without sacrificing complexity. 
 
+## Currently available for testing purposes only
+
+Pending a comprehensive suite of unit tests, use of this package in production is not recommended. 
+
 ## Intended Usage
 
 ```Go
@@ -39,8 +43,15 @@ func main() {
 
     //do stuff with bar
 
-    //Before throwing the cache away, ALWAYS call Implode() or memory may not get released.
+    //Before throwing the cache away, ALWAYS call Implode() or memory won't get released.
     bars.Implode()
 }
 ```
+
+## Feature Ideas
+- 'Go Generate' helper which allows registering the cache during a generate step to allow the compiler to optimize more easily.
+- Instead of using interface{} as the return value of the updater func, use unsafe.Pointer.
+
+## Known Limitation
+- Cache misses/key updates will block on unrelated keys. Mutexes for individual entries may help with this.
 
