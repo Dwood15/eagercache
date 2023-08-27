@@ -1,6 +1,6 @@
 // Package eagercache provides interfaces for threadsafe, mildly-generic, in-memory caches
-//These caches are intended to maximize performance as much as possible by helping to
-//minimize expensive operations such as locking OS calls (File Reads, Network calls, et cetera)
+// These caches are intended to maximize performance as much as possible by helping to
+// minimize expensive operations such as locking OS calls (File Reads, Network calls, et cetera)
 // License: MIT
 package eagercache
 
@@ -10,28 +10,28 @@ import (
 )
 
 type (
-	//how we maintain
+	// cachePooler how we maintain
 	cachePooler struct {
 		mu        sync.RWMutex
 		cleanRate time.Duration
 
-		//pointers for concurrent accesses
-		pool []*cache
+		// pointers for concurrent accesses
+		pool []*Cache
 	}
 
-	// encapsulate cache entries and indicate when it should expire
+	// expirable encapsulates cache entries and indicate when it should expire
 	expirable struct {
-		neverAccessed bool
-		expiresAt     time.Time
-		value         interface{}
+		wasAccessedInInterval bool
+		expiresAt             time.Time
+		value                 interface{}
 	}
 
-	// protectedCache is the ACTUAL implementation of the cache mechanism
-	cache struct {
-		mu         sync.RWMutex
+	// Cache is the implementation of the cache mechanism
+	Cache struct {
+		mu         *sync.RWMutex
 		expireRate time.Duration
 		data       map[string]expirable
-		updater    func(string) interface{}
+		updater    EntryUpdater
 		poolIndex  int
 	}
 )
@@ -46,8 +46,8 @@ var (
 
 func scrubber() {
 	for {
-		//Initiate the cache cleans on arbitrary intervals
-		//Slow cleaning in order to avoid burning CPU cycles to the garbage collector
+		// Initiate the cache cleans on arbitrary intervals
+		// Slow cleaning in order to avoid burning CPU cycles to the garbage collector
 		time.Sleep(p.cleanRate)
 		p.mu.RLock()
 		for i := 0; i < len(p.pool); i++ {
@@ -60,14 +60,14 @@ func scrubber() {
 	}
 }
 
-func (cp *cachePooler) addCache(c *cache) {
+func (cp *cachePooler) addCache(c *Cache) {
 	cp.mu.Lock()
 	c.poolIndex = len(cp.pool)
 	cp.pool = append(cp.pool, c)
 	cp.mu.Unlock()
 }
 
-func (cp *cachePooler) removeCache(c *cache) {
+func (cp *cachePooler) removeCache(c *Cache) {
 	if c == nil || c.poolIndex < 0 {
 		return
 	}
